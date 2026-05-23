@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Prompt Pocket</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+    <script src="/static/htmx.min.js" defer></script>
+    <script src="/static/app.js" defer></script>
+  </head>
+  <body>
+    <main class="page page-home">
+      <div class="shell">
+        {% include "partials/site_banner.html" %}
+
+        <header class="topbar">
+          <div class="brand">
+            <div class="brand-mark">P</div>
+            <div class="brand-copy">
+              <h1>Prompt Pocket</h1>
+              <p>翻译、润色和语法修正，一屏完成。</p>
+            </div>
+          </div>
+
+          <div class="topbar-actions">
+            <div class="status-row">
+              {% if health.has_api_key %}
+                <span class="badge badge-success">API Ready</span>
+              {% else %}
+                <span class="badge badge-warning">缺少 Key</span>
+              {% endif %}
+              <span class="badge badge-muted">{{ health.model }}</span>
+              {% if health.has_proxy %}
+                <span class="badge badge-success">Proxy On</span>
+              {% else %}
+                <span class="badge badge-outline">Direct</span>
+              {% endif %}
+            </div>
+            <div class="toolbar">
+              <a class="button button-outline" href="/logs">调用日志</a>
+              {{ model_picker_html|safe }}
+            </div>
+          </div>
+        </header>
+
+        {% if !can_submit %}
+          <section class="alert alert-warning">
+            <strong>还没有配置 OpenAI API Key</strong>
+            <p>在本地环境里设置 OPENAI_API_KEY 后重启服务。页面不会保存或展示密钥。</p>
+          </section>
+        {% endif %}
+
+        <section class="tool-grid">
+          {% for tool in tools %}
+            <article class="card tool-card">
+              <header class="card-header">
+                <div class="tool-heading">
+                  <div class="tool-icon {{ tool.accent_class }}">{{ tool.icon }}</div>
+                  {% if tool.show_tone %}
+                    <fieldset class="tone-control">
+                      <legend>风格</legend>
+                      <div class="tone-options">
+                        {% for option in tone_options %}
+                          <label title="{{ option.description }}">
+                            <input type="radio" name="tone" value="{{ option.value }}" {% if option.value == "casual" %}checked{% endif %} form="form-{{ tool.mode }}" />
+                            <span>{{ option.label }}</span>
+                          </label>
+                        {% endfor %}
+                      </div>
+                    </fieldset>
+                  {% endif %}
+                </div>
+                <span class="badge badge-outline">预设 prompt</span>
+              </header>
+
+              <div class="card-title">
+                <h2>{{ tool.title }}</h2>
+                <p>{{ tool.description }}</p>
+              </div>
+
+              <form
+                id="form-{{ tool.mode }}"
+                class="tool-form"
+                hx-post="/ui/run"
+                hx-target="#result-{{ tool.mode }}"
+                hx-swap="innerHTML"
+                hx-include="#model-select"
+                hx-indicator="#spinner-{{ tool.mode }}"
+              >
+                <input type="hidden" name="mode" value="{{ tool.mode }}" />
+                <label class="field-label" for="input-{{ tool.mode }}">
+                  <span>输入</span>
+                </label>
+                <textarea
+                  id="input-{{ tool.mode }}"
+                  name="input"
+                  placeholder="{{ tool.placeholder }}"
+                  spellcheck="false"
+                ></textarea>
+
+                <div class="form-actions">
+                  <button class="button button-primary" type="submit" {% if !can_submit %}disabled{% endif %}>
+                    <span id="spinner-{{ tool.mode }}" class="spinner button-spinner htmx-indicator" aria-hidden="true"></span>
+                    <span class="button-label-idle">{{ tool.action_label }}</span>
+                    <span class="button-label-loading">处理中</span>
+                  </button>
+                </div>
+              </form>
+
+              <div class="divider"></div>
+
+              <section class="result-panel">
+                <div class="result-heading">
+                  <span>结果</span>
+                  <button class="icon-button" type="button" data-copy-target="#output-{{ tool.mode }}" title="复制结果">复制</button>
+                </div>
+                <div id="result-{{ tool.mode }}" class="result-body">
+                  <p id="output-{{ tool.mode }}" class="muted">{{ tool.output_placeholder }}</p>
+                </div>
+                <p id="request-{{ tool.mode }}" class="request-id result-request-id"></p>
+              </section>
+            </article>
+          {% endfor %}
+        </section>
+      </div>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>访问 Prompt Pocket</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="page page-center">
+      {% include "partials/site_banner.html" %}
+
+      <section class="card login-card">
+        <header class="login-header">
+          <div class="brand-mark">P</div>
+          <div>
+            <h1>访问 Prompt Pocket</h1>
+            <p>请输入部署环境配置的密码。</p>
+          </div>
+        </header>
+
+        <form class="login-form" method="post" action="/login">
+          <label class="field-label" for="password">访问密码</label>
+          <input id="password" name="password" type="password" autofocus />
+
+          {% if has_error %}
+            <div class="alert alert-error">
+              <strong>无法访问</strong>
+              <p>{{ error }}</p>
+            </div>
+          {% endif %}
+
+          <button class="button button-primary" type="submit">进入</button>
+        </form>
+      </section>
+    </main>
+  </body>
+</html>

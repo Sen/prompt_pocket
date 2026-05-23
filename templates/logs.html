@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>调用日志 - Prompt Pocket</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+    <script src="/static/htmx.min.js" defer></script>
+    <script src="/static/app.js" defer></script>
+  </head>
+  <body>
+    <main class="page">
+      <div class="shell shell-logs">
+        {% include "partials/site_banner.html" %}
+
+        <header class="topbar">
+          <div class="brand">
+            <div class="brand-mark">L</div>
+            <div class="brand-copy">
+              <h1>调用日志</h1>
+              <p>最近的 prompt 调用、耗时和结果。</p>
+            </div>
+          </div>
+
+          <div class="toolbar">
+            <a class="button button-outline" href="/">返回工具</a>
+            <button
+              class="button button-primary"
+              type="button"
+              hx-get="/ui/logs"
+              hx-target="#logs-list"
+              hx-swap="innerHTML"
+              hx-indicator="#logs-refresh-indicator"
+            >
+              <span id="logs-refresh-indicator" class="spinner button-spinner htmx-indicator" aria-hidden="true"></span>
+              <span class="button-label-idle">刷新</span>
+              <span class="button-label-loading">刷新中</span>
+            </button>
+          </div>
+        </header>
+
+        <section id="logs-list" class="logs-panel">
+          {{ logs_list_html|safe }}
+        </section>
+      </div>
+    </main>
+  </body>
+</html>

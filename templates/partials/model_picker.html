@@ -1,0 +1,17 @@
+<div id="model-picker" class="model-picker">
+  <label for="model-select">模型</label>
+  <select id="model-select" name="model" title="{{ source_label }}">
+    {% for group in groups %}
+      <optgroup label="{{ group.label }}">
+        {% for model in group.models %}
+          <option value="{{ model.value }}" {% if model.selected %}selected{% endif %}>
+            {{ model.value }}{% if model.is_default %} · 默认{% endif %}
+          </option>
+        {% endfor %}
+      </optgroup>
+    {% endfor %}
+  </select>
+  <button class="icon-button" type="button" hx-get="/ui/models" hx-target="#model-picker" hx-swap="outerHTML" title="刷新模型列表">
+    刷新
+  </button>
+</div>
