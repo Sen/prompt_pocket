@@ -663,7 +663,7 @@ function LogsPage({ onUnauthorized }: { onUnauthorized: () => void }) {
                 调用日志
               </h1>
               <p className="mt-1 text-sm text-muted-foreground">
-                内存中最近 {logsState?.limit ?? 2000} 条 `/api/run` 调用。
+                数据库中最近 {logsState?.limit ?? 2000} 条 `/api/run` 调用。
               </p>
             </div>
           </div>

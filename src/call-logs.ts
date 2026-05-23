@@ -21,8 +21,9 @@ export type CallLogEntry = {
 export type CallLogCreateInput = Omit<CallLogEntry, "id" | "createdAt">;
 
 export type CallLogStore = {
-  add(entry: CallLogCreateInput): CallLogEntry;
-  list(): CallLogEntry[];
+  add(entry: CallLogCreateInput): Promise<CallLogEntry>;
+  list(): Promise<CallLogEntry[]>;
+  close?(): Promise<void>;
   limit: number;
 };
 
@@ -42,13 +43,13 @@ export function getCallLogLimit(env: Record<string, string | undefined> = proces
   return parsedLimit;
 }
 
-export function createCallLogStore(limit: number): CallLogStore {
+export function createMemoryCallLogStore(limit: number): CallLogStore {
   const entries: CallLogEntry[] = [];
   let nextId = 1;
 
   return {
     limit,
-    add(input) {
+    async add(input) {
       const entry: CallLogEntry = {
         id: nextId,
         createdAt: new Date().toISOString(),
@@ -57,14 +58,12 @@ export function createCallLogStore(limit: number): CallLogStore {
       nextId += 1;
       entries.unshift(entry);
 
-      if (entries.length > limit) {
-        entries.length = limit;
-      }
-
       return entry;
     },
-    list() {
-      return entries.map((entry) => ({ ...entry }));
+    async list() {
+      return entries.slice(0, limit).map((entry) => ({ ...entry }));
     }
   };
 }
+
+export const createCallLogStore = createMemoryCallLogStore;

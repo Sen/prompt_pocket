@@ -20,6 +20,6 @@
       "@/*": ["./src/client/*"]
     }
   },
-  "include": ["src", "vite.config.ts", "tailwind.config.ts", "postcss.config.js"],
+  "include": ["src", "migrations", "kysely.config.ts", "vite.config.ts", "tailwind.config.ts", "postcss.config.js"],
   "references": []
 }

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { createLoginAttemptLimiter } from "./auth";
-import { createCallLogStore } from "./call-logs";
+import { createMemoryCallLogStore } from "./call-logs";
 import { createApp } from "./index";
 
 describe("Prompt Pocket API", () => {
@@ -48,6 +48,7 @@ describe("Prompt Pocket API", () => {
         APP_PASSWORD: "secret",
         OPENAI_API_KEY: "test-key"
       },
+      callLogStore: createMemoryCallLogStore(2),
       runPromptHandler: async ({ mode, input, model }) => ({
         outputText: `processed:${input}`,
         mode,
@@ -358,6 +359,7 @@ describe("Prompt Pocket API", () => {
         OPENAI_API_KEY: "test-key",
         OPENAI_MODEL: "test-model"
       },
+      callLogStore: createMemoryCallLogStore(2),
       runPromptHandler: async ({ mode, input, model, tone }) => ({
         outputText: `processed:${mode}:${tone}:${input}`,
         mode,
@@ -389,8 +391,46 @@ describe("Prompt Pocket API", () => {
     });
   });
 
+  test("returns a server error when call log writing fails", async () => {
+    const app = createApp({
+      env: {
+        OPENAI_API_KEY: "test-key"
+      },
+      callLogStore: {
+        limit: 2,
+        add: async () => {
+          throw new Error("write failed");
+        },
+        list: async () => []
+      },
+      runPromptHandler: async ({ mode, input, model }) => ({
+        outputText: `processed:${input}`,
+        mode,
+        model,
+        requestId: "req_success"
+      })
+    });
+
+    const response = await app.request("/api/run", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        mode: "zh_to_en",
+        input: "hello",
+        model: "gpt-5.2"
+      })
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body.error).toContain("Call log database operation failed");
+    expect(body.error).toContain("write failed");
+  });
+
   test("records successful and failed run calls in memory", async () => {
-    const callLogStore = createCallLogStore(2);
+    const callLogStore = createMemoryCallLogStore(2);
     const app = createApp({
       env: {
         OPENAI_API_KEY: "test-key"

@@ -11,7 +11,7 @@ import {
   setAuthCookie,
   verifyAppPassword
 } from "./auth";
-import { createCallLogStore, getCallLogLimit, type CallLogStore } from "./call-logs";
+import { getCallLogLimit, type CallLogStore } from "./call-logs";
 import {
   createOpenAIClient,
   getRuntimeConfig,
@@ -21,6 +21,7 @@ import {
   type RunPromptResult
 } from "./openai";
 import { flattenModelGroups, isValidModelId, mergeModelGroups, type ModelCatalogGroup } from "./model-catalog";
+import { getCallLogDbPath } from "./database";
 import {
   DEFAULT_ZH_TO_EN_TONE,
   isPromptMode,
@@ -29,6 +30,7 @@ import {
   type PromptMode,
   type ZhToEnTone
 } from "./prompts";
+import { createSqliteCallLogStore } from "./sqlite-call-logs";
 
 type RunBody = {
   mode?: unknown;
@@ -76,6 +78,16 @@ function jsonError(c: Context, status: 400 | 401 | 404 | 422 | 429 | 500 | 502, 
     },
     status
   );
+}
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
+}
+
+function getCallLogErrorMessage(error: unknown): string {
+  const message = getErrorMessage(error, "Call log database operation failed.");
+
+  return `Call log database operation failed. Run "pnpm db:migrate" if the database has not been initialized. ${message}`;
 }
 
 function jsonLoginAttemptBlock(c: Context, block: LoginAttemptBlock) {
@@ -140,7 +152,12 @@ export function createApp(dependencies: AppDependencies = {}) {
     dependencies.runPromptHandler ?? ((input) => runPrompt({ ...input, client: openaiClient }));
   const listModelsHandler =
     dependencies.listModelsHandler ?? ((input) => listAvailableModels({ ...input, client: openaiClient }));
-  const callLogStore = dependencies.callLogStore ?? createCallLogStore(getCallLogLimit(env));
+  const callLogStore =
+    dependencies.callLogStore ??
+    createSqliteCallLogStore({
+      limit: getCallLogLimit(env),
+      databasePath: getCallLogDbPath(env)
+    });
   const authMiddleware = createAuthMiddleware(env);
   const loginAttemptLimiter = dependencies.loginAttemptLimiter ?? createLoginAttemptLimiter();
 
@@ -220,11 +237,15 @@ export function createApp(dependencies: AppDependencies = {}) {
     });
   });
 
-  app.get("/api/logs", (c) => {
-    return c.json({
-      limit: callLogStore.limit,
-      logs: callLogStore.list()
-    });
+  app.get("/api/logs", async (c) => {
+    try {
+      return c.json({
+        limit: callLogStore.limit,
+        logs: await callLogStore.list()
+      });
+    } catch (error) {
+      return jsonError(c, 500, getCallLogErrorMessage(error));
+    }
   });
 
   app.get("/api/models", async (c) => {
@@ -307,30 +328,38 @@ export function createApp(dependencies: AppDependencies = {}) {
         env
       });
 
-      callLogStore.add({
-        durationMs: Math.round(performance.now() - startedAt),
-        status: "success",
-        mode: body.mode,
-        model: selectedModel,
-        tone,
-        input,
-        outputText: result.outputText,
-        requestId: result.requestId
-      });
+      try {
+        await callLogStore.add({
+          durationMs: Math.round(performance.now() - startedAt),
+          status: "success",
+          mode: body.mode,
+          model: selectedModel,
+          tone,
+          input,
+          outputText: result.outputText,
+          requestId: result.requestId
+        });
+      } catch (logError) {
+        return jsonError(c, 500, getCallLogErrorMessage(logError));
+      }
 
       return c.json(result);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "OpenAI request failed.";
+      const message = getErrorMessage(error, "OpenAI request failed.");
 
-      callLogStore.add({
-        durationMs: Math.round(performance.now() - startedAt),
-        status: "error",
-        mode: body.mode,
-        model: selectedModel,
-        tone,
-        input,
-        error: message
-      });
+      try {
+        await callLogStore.add({
+          durationMs: Math.round(performance.now() - startedAt),
+          status: "error",
+          mode: body.mode,
+          model: selectedModel,
+          tone,
+          input,
+          error: message
+        });
+      } catch (logError) {
+        return jsonError(c, 500, getCallLogErrorMessage(logError));
+      }
 
       return jsonError(c, 502, message);
     }
