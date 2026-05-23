@@ -9,8 +9,19 @@ export const ZH_TO_EN_TONES = {
   business: {
     label: "工作用",
     instructions: [
-      "Use clear, polished workplace English suitable for email, documentation, product discussions, or business messages.",
+      "Use clear, polished workplace English suitable for documentation, product discussions, or internal business messages.",
       "Prefer concise professional wording over overly casual expressions."
+    ].join("\n")
+  },
+  email: {
+    label: "邮件用",
+    instructions: [
+      "Use courteous, friendly, professional English suitable for email communication.",
+      "Translate by meaning and intent instead of word-for-word literal translation.",
+      "Soften direct wording tactfully with polite phrasing, while keeping the request clear and easy to act on.",
+      "Use common email wording such as please, thank you, would, could, and appreciate when appropriate.",
+      "You may add brief courtesy, transition, or context-setting phrases when they make the email sound more natural and considerate.",
+      "Do not add unrelated facts, a subject line, greeting, or signature unless the source text includes or asks for it."
     ].join("\n")
   }
 } as const;

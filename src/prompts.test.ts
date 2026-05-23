@@ -17,6 +17,7 @@ describe("prompt modes", () => {
   test("accepts supported zh-to-en tones", () => {
     expect(isZhToEnTone("casual")).toBe(true);
     expect(isZhToEnTone("business")).toBe(true);
+    expect(isZhToEnTone("email")).toBe(true);
     expect(isZhToEnTone("formal")).toBe(false);
   });
 
@@ -36,10 +37,16 @@ describe("prompt modes", () => {
     const businessPrompt = getPromptMode("zh_to_en", {
       zhToEnTone: "business"
     });
+    const emailPrompt = getPromptMode("zh_to_en", {
+      zhToEnTone: "email"
+    });
 
     expect(casualPrompt.instructions).toContain("conversational");
     expect(businessPrompt.instructions).toContain("workplace English");
+    expect(emailPrompt.instructions).toContain("email communication");
+    expect(emailPrompt.instructions).toContain("meaning and intent");
     expect(casualPrompt.instructions).not.toBe(businessPrompt.instructions);
+    expect(emailPrompt.instructions).not.toBe(businessPrompt.instructions);
   });
 
   test("uses casual zh-to-en tone by default", () => {

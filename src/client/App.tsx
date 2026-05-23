@@ -11,6 +11,7 @@ import {
   Loader2,
   LockKeyhole,
   LogIn,
+  Mail,
   MessageCircle,
   PenLine,
   RefreshCw,
@@ -37,7 +38,7 @@ import {
 } from "../model-catalog";
 
 type PromptMode = "zh_to_en" | "en_to_zh" | "polish_en";
-type ZhToEnTone = "casual" | "business";
+type ZhToEnTone = "casual" | "business" | "email";
 
 type HealthState = {
   ok: boolean;
@@ -151,8 +152,14 @@ const zhToEnToneOptions = [
   {
     value: "business",
     label: "工作用",
-    description: "清晰、专业、适合邮件",
+    description: "清晰、专业、适合工作",
     icon: Briefcase
+  },
+  {
+    value: "email",
+    label: "邮件用",
+    description: "礼貌、友好、适合邮件",
+    icon: Mail
   }
 ] as const satisfies Array<{
   value: ZhToEnTone;
@@ -163,7 +170,8 @@ const zhToEnToneOptions = [
 
 const zhToEnToneLabels: Record<ZhToEnTone, string> = {
   casual: "口语化",
-  business: "工作用"
+  business: "工作用",
+  email: "邮件用"
 };
 
 const initialToolState = tools.reduce(
@@ -959,7 +967,7 @@ function ToneSelector({
   return (
     <fieldset className="min-w-0">
       <legend className="sr-only">风格</legend>
-      <div className="grid h-9 w-[168px] grid-cols-2 rounded-md border bg-slate-100/80 p-1">
+      <div className="grid h-9 w-[248px] grid-cols-3 rounded-md border bg-slate-100/80 p-1">
         {zhToEnToneOptions.map((option) => {
           const Icon = option.icon;
           const checked = option.value === value;
