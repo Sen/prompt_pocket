@@ -12,7 +12,6 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use thiserror::Error;
-use tower_http::services::ServeDir;
 
 use crate::{
     auth::{
@@ -80,7 +79,9 @@ pub fn create_router(state: AppState) -> Router {
         .route("/auth/status", get(auth_status))
         .route("/auth/login", post(auth_login))
         .route("/auth/logout", post(auth_logout))
-        .nest_service("/static", ServeDir::new("static"))
+        .route("/static/styles.css", get(static_styles))
+        .route("/static/htmx.min.js", get(static_htmx))
+        .route("/static/app.js", get(static_app_js))
         .with_state(state)
 }
 
@@ -494,6 +495,27 @@ async fn auth_logout(State(state): State<AppState>) -> Response {
         .insert(header::SET_COOKIE, clear_auth_cookie_header(&state.config));
 
     response
+}
+
+async fn static_styles() -> Response {
+    embedded_static_asset(
+        "text/css; charset=utf-8",
+        include_str!("../static/styles.css"),
+    )
+}
+
+async fn static_htmx() -> Response {
+    embedded_static_asset(
+        "text/javascript; charset=utf-8",
+        include_str!("../static/htmx.min.js"),
+    )
+}
+
+async fn static_app_js() -> Response {
+    embedded_static_asset(
+        "text/javascript; charset=utf-8",
+        include_str!("../static/app.js"),
+    )
 }
 
 async fn model_payload(state: &AppState) -> ModelListPayload {
@@ -950,6 +972,15 @@ fn error_response(status: StatusCode, message: impl Into<String>) -> Response {
     response
 }
 
+fn embedded_static_asset(content_type: &'static str, body: &'static str) -> Response {
+    let mut response = body.into_response();
+    response
+        .headers_mut()
+        .insert(header::CONTENT_TYPE, HeaderValue::from_static(content_type));
+
+    response
+}
+
 fn call_log_error_message(error: LogError) -> String {
     format!("Call log database operation failed. {error}")
 }
@@ -1325,5 +1356,29 @@ mod tests {
 
         assert!(html.contains("processed:polish_en:none:hello"));
         assert!(!html.contains("<html"));
+    }
+
+    #[tokio::test]
+    async fn serves_embedded_static_assets() {
+        let app = create_router(test_state(base_config(), MockOpenAi::default()).await);
+        let response = app
+            .oneshot(
+                axum::http::Request::get("/static/styles.css")
+                    .body(axum::body::Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(
+            response.headers().get(header::CONTENT_TYPE).unwrap(),
+            "text/css; charset=utf-8"
+        );
+
+        let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
+        let css = String::from_utf8(body.to_vec()).unwrap();
+
+        assert!(css.contains(".page"));
     }
 }
