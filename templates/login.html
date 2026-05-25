@@ -4,35 +4,50 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>访问 Prompt Pocket</title>
+    <link rel="stylesheet" href="/static/bootstrap.min.css" />
     <link rel="stylesheet" href="/static/styles.css" />
   </head>
   <body>
-    <main class="page page-center">
-      {% include "partials/site_banner.html" %}
-
-      <section class="card login-card">
-        <header class="login-header">
-          <div class="brand-mark">P</div>
-          <div>
-            <h1>访问 Prompt Pocket</h1>
-            <p>请输入部署环境配置的密码。</p>
+    <main class="page">
+      <div class="shell">
+        <header class="card border-0 shadow-sm">
+          <div class="card-body d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center justify-content-between gap-3">
+            <a class="brand brand-link" href="/" aria-label="返回首页">
+              <div class="brand-mark">P</div>
+              <div class="brand-copy">
+                <h1>Prompt Pocket</h1>
+                <p>翻译、润色和语法修正，一屏完成。</p>
+              </div>
+            </a>
           </div>
         </header>
 
-        <form class="login-form" method="post" action="/login">
-          <label class="field-label" for="password">访问密码</label>
-          <input id="password" name="password" type="password" autofocus />
+        <section class="card login-card border-0 shadow-sm mx-auto my-auto">
+          <div class="card-body">
+            <header class="login-header">
+              <div class="brand-mark">P</div>
+              <div>
+                <h1>访问 Prompt Pocket</h1>
+                <p>请输入部署环境配置的密码。</p>
+              </div>
+            </header>
 
-          {% if has_error %}
-            <div class="alert alert-error">
-              <strong>无法访问</strong>
-              <p>{{ error }}</p>
-            </div>
-          {% endif %}
+            <form class="login-form d-grid gap-3 mt-4" method="post" action="/login">
+              <label class="form-label text-secondary small fw-semibold mb-0" for="password">访问密码</label>
+              <input class="form-control" id="password" name="password" type="password" autofocus />
 
-          <button class="button button-primary" type="submit">进入</button>
-        </form>
-      </section>
+              {% if has_error %}
+                <div class="alert alert-danger mb-0">
+                  <strong>无法访问</strong>
+                  <p class="mb-0 mt-1">{{ error }}</p>
+                </div>
+              {% endif %}
+
+              <button class="btn btn-primary" type="submit">进入</button>
+            </form>
+          </div>
+        </section>
+      </div>
     </main>
   </body>
 </html>

@@ -1,39 +1,40 @@
-<div class="logs-heading">
-  <p>数据库中最近 {{ limit }} 条调用。</p>
+<div class="logs-heading p-3">
+  <h1 class="h5 mb-1">调用日志</h1>
+  <p class="text-secondary small mb-0">数据库中最近 {{ limit }} 条调用。</p>
 </div>
 
 {% if has_logs %}
-  <div class="log-list">
+  <div class="list-group list-group-flush">
     {% for log in logs %}
-      <article class="log-row">
-        <aside class="log-meta">
-          <div class="badge-row">
-            <span class="badge badge-{{ log.status_class }}">{{ log.status_label }}</span>
-            <span class="badge badge-muted">{{ log.mode }}</span>
+      <article class="log-row list-group-item">
+        <aside class="text-secondary small">
+          <div class="d-flex flex-wrap align-items-center gap-2">
+            <span class="badge rounded-pill text-bg-{{ log.status_class }}">{{ log.status_label }}</span>
+            <span class="badge rounded-pill text-bg-secondary">{{ log.mode }}</span>
             {% if log.has_tone %}
-              <span class="badge badge-outline">{{ log.tone_label }}</span>
+              <span class="badge rounded-pill text-bg-light border text-secondary">{{ log.tone_label }}</span>
             {% endif %}
           </div>
-          <p>{{ log.created_at }}</p>
-          <p>{{ log.duration_ms }} ms</p>
-          <p class="break-word">{{ log.model }}</p>
+          <p class="mb-0 mt-2">{{ log.created_at }}</p>
+          <p class="mb-0 mt-2">{{ log.duration_ms }} ms</p>
+          <p class="break-word mb-0 mt-2">{{ log.model }}</p>
           {% if log.has_request_id %}
-            <p class="break-word">{{ log.request_id }}</p>
+            <p class="break-word mb-0 mt-2">{{ log.request_id }}</p>
           {% endif %}
         </aside>
         <div class="log-text-grid">
-          <section class="log-text">
-            <h2>输入</h2>
-            <p>{{ log.input }}</p>
+          <section class="log-text border rounded bg-body-tertiary p-3">
+            <h2 class="h6 text-secondary mb-2">输入</h2>
+            <p class="mb-0">{{ log.input }}</p>
           </section>
-          <section class="log-text">
-            <h2>{{ log.output_label }}</h2>
-            <p>{{ log.output_text }}</p>
+          <section class="log-text border rounded bg-body-tertiary p-3">
+            <h2 class="h6 text-secondary mb-2">{{ log.output_label }}</h2>
+            <p class="mb-0">{{ log.output_text }}</p>
           </section>
         </div>
       </article>
     {% endfor %}
   </div>
 {% else %}
-  <div class="empty-state">暂无调用日志。</div>
+  <div class="p-5 text-center text-secondary">暂无调用日志。</div>
 {% endif %}

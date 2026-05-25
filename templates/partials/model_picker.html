@@ -1,6 +1,6 @@
-<div id="model-picker" class="model-picker">
-  <label for="model-select">模型</label>
-  <select id="model-select" name="model" title="{{ source_label }}">
+<div id="model-picker" class="model-picker d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center gap-2">
+  <label class="form-label text-secondary small mb-0" for="model-select">模型</label>
+  <select id="model-select" class="form-select" name="model" title="{{ source_label }}">
     {% for group in groups %}
       <optgroup label="{{ group.label }}">
         {% for model in group.models %}
@@ -11,7 +11,7 @@
       </optgroup>
     {% endfor %}
   </select>
-  <button class="icon-button" type="button" hx-get="/ui/models" hx-target="#model-picker" hx-swap="outerHTML" title="刷新模型列表">
+  <button class="btn btn-outline-secondary" type="button" hx-get="/ui/models" hx-target="#model-picker" hx-swap="outerHTML" title="刷新模型列表">
     刷新
   </button>
 </div>

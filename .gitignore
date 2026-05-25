@@ -2,7 +2,8 @@ node_modules
 dist
 target
 .vite
-bin
+bin/*
+!bin/dev
 data/*.sqlite
 data/*.sqlite-*
 .env

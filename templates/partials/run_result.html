@@ -1,19 +1,19 @@
 {% if success %}
   {% if has_text %}
-    <p id="output-{{ mode }}" class="result-text">{{ text }}</p>
+    <p id="output-{{ mode }}" class="result-text mb-0">{{ text }}</p>
     {% if has_request_id %}
-      <p id="request-{{ mode }}" class="request-id result-request-id" hx-swap-oob="true">{{ request_id }}</p>
+      <p id="request-{{ mode }}" class="request-id result-request-id text-secondary" hx-swap-oob="true">{{ request_id }}</p>
     {% else %}
-      <p id="request-{{ mode }}" class="request-id result-request-id" hx-swap-oob="true"></p>
+      <p id="request-{{ mode }}" class="request-id result-request-id text-secondary" hx-swap-oob="true"></p>
     {% endif %}
   {% else %}
-    <p id="output-{{ mode }}" class="muted">{{ placeholder }}</p>
-    <p id="request-{{ mode }}" class="request-id result-request-id" hx-swap-oob="true"></p>
+    <p id="output-{{ mode }}" class="text-secondary mb-0">{{ placeholder }}</p>
+    <p id="request-{{ mode }}" class="request-id result-request-id text-secondary" hx-swap-oob="true"></p>
   {% endif %}
 {% else %}
-  <div class="alert alert-error">
+  <div class="alert alert-danger mb-0">
     <strong>处理失败</strong>
-    <p>{{ error }}</p>
+    <p class="mb-0 mt-1">{{ error }}</p>
   </div>
-  <p id="request-{{ mode }}" class="request-id result-request-id" hx-swap-oob="true"></p>
+  <p id="request-{{ mode }}" class="request-id result-request-id text-secondary" hx-swap-oob="true"></p>
 {% endif %}

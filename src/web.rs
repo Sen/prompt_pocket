@@ -79,6 +79,7 @@ pub fn create_router(state: AppState) -> Router {
         .route("/auth/status", get(auth_status))
         .route("/auth/login", post(auth_login))
         .route("/auth/logout", post(auth_logout))
+        .route("/static/bootstrap.min.css", get(static_bootstrap_styles))
         .route("/static/styles.css", get(static_styles))
         .route("/static/htmx.min.js", get(static_htmx))
         .route("/static/app.js", get(static_app_js))
@@ -504,6 +505,13 @@ async fn static_styles() -> Response {
     )
 }
 
+async fn static_bootstrap_styles() -> Response {
+    embedded_static_asset(
+        "text/css; charset=utf-8",
+        include_str!("../static/bootstrap.min.css"),
+    )
+}
+
 async fn static_htmx() -> Response {
     embedded_static_asset(
         "text/javascript; charset=utf-8",
@@ -906,7 +914,7 @@ fn render_html<T: Template>(template: T) -> Response {
 fn render_template_string<T: Template>(template: T) -> String {
     template.render().unwrap_or_else(|error| {
         format!(
-            r#"<div class="alert alert-error">Template rendering failed: {}</div>"#,
+            r#"<div class="alert alert-danger">Template rendering failed: {}</div>"#,
             escape_html(&error.to_string())
         )
     })
@@ -963,7 +971,7 @@ fn json_error(status: StatusCode, message: impl Into<String>) -> Response {
 
 fn error_response(status: StatusCode, message: impl Into<String>) -> Response {
     let mut response = Html(format!(
-        r#"<div class="alert alert-error"><strong>请求失败</strong><p>{}</p></div>"#,
+        r#"<div class="alert alert-danger"><strong>请求失败</strong><p>{}</p></div>"#,
         escape_html(&message.into())
     ))
     .into_response();
@@ -1361,24 +1369,31 @@ mod tests {
     #[tokio::test]
     async fn serves_embedded_static_assets() {
         let app = create_router(test_state(base_config(), MockOpenAi::default()).await);
-        let response = app
-            .oneshot(
-                axum::http::Request::get("/static/styles.css")
-                    .body(axum::body::Body::empty())
-                    .unwrap(),
-            )
-            .await
-            .unwrap();
 
-        assert_eq!(response.status(), StatusCode::OK);
-        assert_eq!(
-            response.headers().get(header::CONTENT_TYPE).unwrap(),
-            "text/css; charset=utf-8"
-        );
+        for (path, expected_content) in [
+            ("/static/styles.css", ".page"),
+            ("/static/bootstrap.min.css", "Bootstrap"),
+        ] {
+            let response = app
+                .clone()
+                .oneshot(
+                    axum::http::Request::get(path)
+                        .body(axum::body::Body::empty())
+                        .unwrap(),
+                )
+                .await
+                .unwrap();
 
-        let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
-        let css = String::from_utf8(body.to_vec()).unwrap();
+            assert_eq!(response.status(), StatusCode::OK);
+            assert_eq!(
+                response.headers().get(header::CONTENT_TYPE).unwrap(),
+                "text/css; charset=utf-8"
+            );
 
-        assert!(css.contains(".page"));
+            let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
+            let css = String::from_utf8(body.to_vec()).unwrap();
+
+            assert!(css.contains(expected_content));
+        }
     }
 }
